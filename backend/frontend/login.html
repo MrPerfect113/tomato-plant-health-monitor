@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login | Tomato Plant Health Monitor</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body {
+      font-family: Inter, system-ui, sans-serif;
+      font-size: 16px;
+    }
+
+    .card {
+      background: #1a1a2e;
+      border: 1px solid #2a2a3f;
+      border-radius: 12px;
+      padding: 32px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+
+    label {
+      font-size: 14px;
+      font-weight: 500;
+      color: #c7cbe8;
+      margin-bottom: 4px;
+    }
+
+    input {
+      height: 46px;
+      padding: 0 12px;
+      border-radius: 8px;
+      background: #0f1217;
+      border: 1px solid #2a2a3f;
+      color: #f0f4ff;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 2px rgba(79,70,229,0.25);
+    }
+
+    button {
+      height: 44px;
+      border-radius: 8px;
+      background: #4f46e5;
+      color: white;
+      font-weight: 600;
+      transition: background 0.12s ease, transform 0.08s ease;
+    }
+
+    button:hover { background: #6366f1; }
+    button:active { transform: scale(0.97); }
+  </style>
+</head>
+
+<body class="bg-[#0f1217] text-[#f0f4ff]">
+
+<main class="h-screen flex items-center justify-center">
+
+  <div class="card w-[360px]">
+
+    <div class="text-center mb-6">
+      <div class="text-xl font-semibold tracking-wide text-[#e0e4ff]">
+        Tomato Plant Health Monitor
+      </div>
+      <div class="text-sm text-[#9aa0c5] mt-1">
+        Internal System Access
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-4">
+
+      <div class="flex flex-col">
+        <label>Username</label>
+        <input id="username" autocomplete="off" />
+      </div>
+
+      <div class="flex flex-col">
+        <label>Password</label>
+        <input id="password" type="password" autocomplete="off" />
+      </div>
+
+      <button onclick="login()">Login</button>
+
+    </div>
+
+    <div id="error"
+         class="text-xs text-center text-red-400 mt-4 hidden">
+      Invalid credentials
+    </div>
+
+  </div>
+
+</main>
+
+<script>
+  const username = document.getElementById("username");
+  const password = document.getElementById("password");
+  const errorBox = document.getElementById("error");
+
+  function login() {
+    fetch("/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: username.value,
+        password: password.value
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        window.location.href = "/";
+      } else {
+        errorBox.classList.remove("hidden");
+      }
+    });
+  }
+
+  // Enter behavior
+  username.addEventListener("keydown", e => {
+    if (e.key === "Enter") password.focus();
+  });
+
+  password.addEventListener("keydown", e => {
+    if (e.key === "Enter") login();
+  });
+</script>
+
+</body>
+</html>

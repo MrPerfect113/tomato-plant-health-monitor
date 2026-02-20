@@ -1,0 +1,5 @@
+USE_ESP32_CAM = False
+LAPTOP_CAM_INDEX = 0
+
+MODEL_PATH = "models/tomato_yolo.pt"
+CONF_THRESHOLD = 0.25
