@@ -296,3 +296,15 @@ function pollDistance() {
     })
     .catch(() => {});
 }
+let servoTimer = null;
+
+function moveServo(angle){
+
+  document.getElementById("servoValue").innerText = angle
+
+  fetch(`/servo/${angle}`)
+  .then(res => res.json())
+  .then(data => console.log("SERVO:", data))
+  .catch(err => console.error(err))
+
+}
