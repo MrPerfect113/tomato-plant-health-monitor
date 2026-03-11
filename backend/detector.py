@@ -1,6 +1,7 @@
 from ultralytics import YOLO
 import threading
 import os
+import torch
 
 # ---------------- BASE PATH ----------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -11,6 +12,11 @@ MODEL_PATHS = {
     "tomato": os.path.join(MODEL_DIR, "tomato_yolo.pt"),
     "leaf": os.path.join(MODEL_DIR, "leaf_disease_yolo.pt")
 }
+
+# ---------------- DEVICE ----------------
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+
+print(f"[DETECTOR] Using device: {DEVICE}")
 
 # ---------------- GLOBAL STATE ----------------
 _current_model_name = None
@@ -35,10 +41,15 @@ def set_model(name: str):
         if _current_model_name == name:
             return
 
-        _current_model = YOLO(model_path)
+        model = YOLO(model_path)
+
+        # move model to GPU
+        model.to(DEVICE)
+
+        _current_model = model
         _current_model_name = name
 
-        print(f"[DETECTOR] Loaded model: {name}")
+        print(f"[DETECTOR] Loaded model: {name} on {DEVICE}")
 
 def set_confidence(val: float):
     global _confidence
@@ -63,7 +74,15 @@ def detect(frame):
         model = _current_model
         conf = _confidence
 
-    results = model(frame, conf=conf, verbose=False)[0]
+    results = model(
+        frame,
+        conf=conf,
+        device=DEVICE,      # GPU inference
+        imgsz=320,          # faster
+        half=True if DEVICE=="cuda" else False,
+        verbose=False
+    )[0]
+
     detections = []
 
     if results.boxes is None:

@@ -3,10 +3,10 @@ import time
 
 # ================= STREAM SOURCE =================
 # Laptop camera (default)
-STREAM_SRC = 0
+#STREAM_SRC = 0
 
 # ESP32-CAM (uncomment when needed)
-#STREAM_SRC = "http://172.28.196.220:81/stream"
+STREAM_SRC = "http://10.251.104.210:81/stream"
 
 cap = None
 
