@@ -182,39 +182,43 @@ function startFullDetect() {
   if (!railAllowed() || fullDetectActive) return;
 
   fullDetectActive = true;
+
   disableManualRail();
   setRailStatus("Full Detect Running");
 
   document.getElementById("fullDetectBtn").classList.add("btn-active");
-  document.getElementById("fullDetectProgress").classList.remove("hidden");
 
-  simulateProgress();
-}
+  fetch("/api/fulldetect", {
+    method: "POST",
+    credentials: "include"
+  })
+  .then(res => res.json())
+  .then(data => {
+    console.log("FULL DETECT:", data);
 
-function simulateProgress() {
-  let p = 0;
-  const bar = document.getElementById("progressBar");
-
-  const timer = setInterval(() => {
-    p += 5;
-    bar.style.width = p + "%";
-
-    if (p >= 100) {
-      clearInterval(timer);
+    if (!data.success) {
+      showError("Full detect failed");
       finishFullDetect();
+      return;
     }
-  }, 400);
+
+    // 🔥 AUTO RESET (core fix)
+    setTimeout(finishFullDetect, 4000); // adjust time
+  })
+  .catch(err => {
+    console.error(err);
+    showError("Full detect error");
+    finishFullDetect();
+  });
 }
 
 function finishFullDetect() {
   fullDetectActive = false;
 
-  document.getElementById("progressBar").style.width = "0%";
-  document.getElementById("fullDetectProgress").classList.add("hidden");
   document.getElementById("fullDetectBtn").classList.remove("btn-active");
 
   enableManualRail();
-  setRailStatus("Full Detect Complete");
+  setRailStatus("Idle");
 }
 
 /* ================= GATING ================= */

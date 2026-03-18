@@ -1,35 +1,22 @@
 import requests
 
-ESP32_IP = "10.88.0.213"
-
-MOTOR_URL = f"http://{ESP32_IP}/control"
-SERVO_URL = f"http://{ESP32_IP}/servo"
-
-VALID_COMMANDS = {"forward", "backward", "stop"}
+ESP32_HOST = "esp32rail.local"
 
 def move(cmd: str) -> bool:
-
-    print("[MOTOR] CMD RECEIVED:", cmd)
-
-    if cmd not in VALID_COMMANDS:
-        print("[MOTOR] Invalid command:", cmd)
-        return False
+    print("=== MOVE FUNCTION HIT ===")
+    print("[MOVE] CMD:", cmd)
 
     try:
+        url = f"http://{ESP32_HOST}/control?cmd={cmd}"
 
-        r = requests.post(
-            MOTOR_URL,
-            data=cmd,
-            headers={"Content-Type": "text/plain"},
-            timeout=2
-        )
+        print("[MOVE URL]:", url)
 
-        print("[MOTOR] ESP32 STATUS:", r.status_code)
+        r = requests.get(url, timeout=2)
+
+        print("[MOVE STATUS]:", r.status_code)
 
         return r.status_code == 200
 
     except Exception as e:
-
-        print("[MOTOR] ERROR:", e)
-
+        print("[MOVE ERROR]:", e)
         return False

@@ -13,8 +13,23 @@ MODEL_PATHS = {
     "leaf": os.path.join(MODEL_DIR, "leaf_disease_yolo.pt")
 }
 
-# ---------------- DEVICE ----------------
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+# ---------------- DEVICE SELECTION ----------------
+def choose_device():
+
+    if torch.cuda.is_available():
+        choice = input("Run detection on CPU or GPU? (cpu/gpu): ").strip().lower()
+
+        if choice == "gpu":
+            return "cuda"
+        else:
+            return "cpu"
+
+    else:
+        print("[DETECTOR] GPU not available. Using CPU.")
+        return "cpu"
+
+
+DEVICE = choose_device()
 
 print(f"[DETECTOR] Using device: {DEVICE}")
 
@@ -43,7 +58,6 @@ def set_model(name: str):
 
         model = YOLO(model_path)
 
-        # move model to GPU
         model.to(DEVICE)
 
         _current_model = model
@@ -51,10 +65,12 @@ def set_model(name: str):
 
         print(f"[DETECTOR] Loaded model: {name} on {DEVICE}")
 
+
 def set_confidence(val: float):
     global _confidence
     _confidence = max(0.01, min(1.0, val))
     print(f"[DETECTOR] Confidence set to {_confidence:.2f}")
+
 
 def stop_detection():
     global _current_model, _current_model_name
@@ -65,8 +81,10 @@ def stop_detection():
 
     print("[DETECTOR] Detection stopped")
 
+
 # ---------------- DETECTION ----------------
 def detect(frame):
+
     if _current_model is None:
         return []
 
@@ -77,9 +95,9 @@ def detect(frame):
     results = model(
         frame,
         conf=conf,
-        device=DEVICE,      # GPU inference
-        imgsz=320,          # faster
-        half=True if DEVICE=="cuda" else False,
+        device=DEVICE,
+        imgsz=320,
+        half=True if DEVICE == "cuda" else False,
         verbose=False
     )[0]
 
