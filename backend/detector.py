@@ -2,87 +2,53 @@ from ultralytics import YOLO
 import threading
 import os
 import torch
+import numpy as np
 
-# ---------------- BASE PATH ----------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_DIR = os.path.join(BASE_DIR, "models")
 
-# ---------------- MODEL PATHS ----------------
 MODEL_PATHS = {
     "tomato": os.path.join(MODEL_DIR, "tomato_yolo.pt"),
     "leaf": os.path.join(MODEL_DIR, "leaf_disease_yolo.pt")
 }
 
-# ---------------- DEVICE SELECTION ----------------
 def choose_device():
-
-    if torch.cuda.is_available():
-        choice = input("Run detection on CPU or GPU? (cpu/gpu): ").strip().lower()
-
-        if choice == "gpu":
-            return "cuda"
-        else:
-            return "cpu"
-
-    else:
-        print("[DETECTOR] GPU not available. Using CPU.")
-        return "cpu"
-
+    return "cuda" if torch.cuda.is_available() else "cpu"
 
 DEVICE = choose_device()
+print(f"[DETECTOR] Using {DEVICE}")
 
-print(f"[DETECTOR] Using device: {DEVICE}")
-
-# ---------------- GLOBAL STATE ----------------
 _current_model_name = None
 _current_model = None
-_confidence = 0.5
-
 _model_lock = threading.Lock()
 
-# ---------------- MODEL CONTROL ----------------
 def set_model(name: str):
     global _current_model, _current_model_name
 
     if name not in MODEL_PATHS:
-        raise ValueError(f"Invalid model: {name}")
+        raise ValueError("Invalid model")
 
     model_path = MODEL_PATHS[name]
-
-    if not os.path.exists(model_path):
-        raise FileNotFoundError(f"Model not found: {model_path}")
 
     with _model_lock:
         if _current_model_name == name:
             return
 
         model = YOLO(model_path)
-
         model.to(DEVICE)
+
+        # warmup
+        dummy = np.zeros((320, 320, 3), dtype=np.uint8)
+        model(dummy, device=DEVICE, imgsz=320, verbose=False)
 
         _current_model = model
         _current_model_name = name
 
-        print(f"[DETECTOR] Loaded model: {name} on {DEVICE}")
-
-
-def set_confidence(val: float):
-    global _confidence
-    _confidence = max(0.01, min(1.0, val))
-    print(f"[DETECTOR] Confidence set to {_confidence:.2f}")
-
+        print(f"[DETECTOR] Loaded {name}")
 
 def stop_detection():
-    global _current_model, _current_model_name
+    print("[DETECTOR] Detection paused")
 
-    with _model_lock:
-        _current_model = None
-        _current_model_name = None
-
-    print("[DETECTOR] Detection stopped")
-
-
-# ---------------- DETECTION ----------------
 def detect(frame):
 
     if _current_model is None:
@@ -90,11 +56,10 @@ def detect(frame):
 
     with _model_lock:
         model = _current_model
-        conf = _confidence
 
     results = model(
         frame,
-        conf=conf,
+        conf=0.5,
         device=DEVICE,
         imgsz=320,
         half=True if DEVICE == "cuda" else False,
@@ -119,3 +84,5 @@ def detect(frame):
         })
 
     return detections
+
+set_model("tomato")

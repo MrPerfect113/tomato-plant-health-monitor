@@ -1,36 +1,34 @@
 import cv2
 import time
 
-# ================= STREAM SOURCE =================
-
-# Laptop camera
-#STREAM_SRC = 0
-
-# ESP32-CAM stream
-STREAM_SRC = "http://esp32cam.local:81/stream"
+STREAM_SRC = "http://10.174.101.50:81/stream"
 
 cap = None
+last_connect = 0
 
 def get_frame():
+    global cap, last_connect
 
-    global cap
-
-    # initialize camera if needed
+    # reconnect logic
     if cap is None or not cap.isOpened():
 
-        cap = cv2.VideoCapture(STREAM_SRC)
+        if time.time() - last_connect < 1:
+            return None
 
-        # reduce buffering latency
+        last_connect = time.time()
+
+        cap = cv2.VideoCapture(STREAM_SRC)
         cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 
         time.sleep(0.2)
 
         if not cap.isOpened():
+            cap = None
             return None
 
     ret, frame = cap.read()
 
-    if not ret:
+    if not ret or frame is None:
         cap.release()
         cap = None
         return None

@@ -34,17 +34,6 @@ body {
   opacity: 0.45;
   pointer-events: none;
 }
-
-input[type=range] {
-  height: 12px;
-}
-
-input[type=range]::-webkit-slider-thumb {
-  width: 22px;
-  height: 22px;
-  background: #00d4ff;
-  border-radius: 50%;
-}
 </style>
 </head>
 
@@ -52,17 +41,13 @@ input[type=range]::-webkit-slider-thumb {
 
 <header class="h-16 flex items-center justify-between px-6 border-b border-[#2a2a3f]">
 <div>
-
-<h1 class="text-3xl font-bold tracking-wide text-[#d0d4ff]">
+<h1 class="text-3xl font-bold text-[#d0d4ff]">
 Tomato Plant Health Monitor
 </h1>
 
 <div class="text-sm text-cyan-400 mt-1">
 Distance: <span id="distanceValue">0.00</span> cm
 </div>
-
-
-
 </div>
 </header>
 
@@ -70,7 +55,6 @@ Distance: <span id="distanceValue">0.00</span> cm
 
 <!-- VIDEO -->
 <section class="w-4/5 p-6">
-
 <div class="relative h-full rounded-xl border border-[#00d4ff] bg-black">
 
 <img id="video"
@@ -82,7 +66,6 @@ No video stream
 </div>
 
 </div>
-
 </section>
 
 <div class="border-l border-gray-700"></div>
@@ -92,15 +75,8 @@ No video stream
 
 <!-- STREAM -->
 <div class="flex flex-col gap-4">
-
-<button onclick="startStream()" class="btn bg-blue-500 text-white">
-Start Stream
-</button>
-
-<button onclick="stopStream()" class="btn bg-red-500 text-white">
-Stop Stream
-</button>
-
+<button onclick="startStream()" class="btn bg-blue-500 text-white">Start Stream</button>
+<button onclick="stopStream()" class="btn bg-red-500 text-white">Stop Stream</button>
 </div>
 
 <!-- DETECTION -->
@@ -121,59 +97,30 @@ Active Model: <span id="activeModel">None</span>
 <div id="detectionPanel"
 class="hidden p-4 rounded-xl bg-[#1e1e2e] flex flex-col gap-3">
 
-<button id="tomatoBtn"
-onclick="selectModel('tomato')"
-class="btn bg-blue-600 text-white">
+<button id="tomatoBtn" onclick="selectModel('tomato')" class="btn bg-blue-600 text-white">
 Tomato Condition
 </button>
 
-<button id="leafBtn"
-onclick="selectModel('leaf')"
-class="btn bg-purple-600 text-white">
+<button id="leafBtn" onclick="selectModel('leaf')" class="btn bg-purple-600 text-white">
 Leaf Disease
 </button>
 
-<div>
-
-<div class="flex justify-between items-center mb-2">
-<span class="text-sm">Confidence</span>
-<span id="confValue" class="text-lg font-bold text-[#00d4ff]">30%</span>
-</div>
-
-<input type="range"
-min="1" max="100" value="30"
-class="w-full"
-oninput="setConfidence(this.value)">
-
-</div>
 </div>
 </div>
 
 <!-- RAIL CONTROL -->
 <div class="flex flex-col gap-4">
 
-<h2 class="text-xl font-semibold text-[#d0d4ff]">
-Rail Control
-</h2>
+<h2 class="text-xl font-semibold text-[#d0d4ff]">Rail Control</h2>
 
 <div id="railStatus" class="text-sm text-cyan-400">
 Rail Status: Idle
 </div>
 
-<div id="fullDetectProgress"
-class="hidden w-full h-3 rounded bg-gray-700 overflow-hidden">
-
-<div id="progressBar"
-class="h-full bg-emerald-400 transition-all duration-300"
-style="width:0%">
-</div>
-
-</div>
-
 <button id="fullDetectBtn"
 onclick="startFullDetect()"
 class="btn bg-slate-600 text-white btn-disabled">
-Full Detect
+Full Auto
 </button>
 
 <button id="forwardBtn"
@@ -188,34 +135,39 @@ class="btn bg-[#2a2a3f] text-white btn-disabled">
 Backward
 </button>
 
+<!-- SPEED -->
+<div class="flex flex-col gap-2 mt-4">
+<h3 class="text-lg font-semibold text-[#d0d4ff]">Speed</h3>
+
+<div class="flex justify-between text-sm text-cyan-400">
+<span>Value</span>
+<span id="speedValue">100</span>
 </div>
 
-<!-- CAMERA SERVO CONTROL -->
+<input type="range" min="0" max="255" value="100" id="speedSlider">
+</div>
 
+</div>
+
+<!-- SERVO -->
 <div class="flex flex-col gap-3">
 
 <h2 class="text-xl font-semibold text-[#d0d4ff]">
-Camera Control
+Servo Control
 </h2>
 
 <div class="text-sm text-cyan-400">
 Angle: <span id="servoValue">90</span>°
 </div>
 
+<div class="text-sm text-cyan-400">
+Status: <span id="servoStatus">Idle</span>
+</div>
+
 <div class="flex gap-2">
-
-<button class="btn bg-blue-600 text-white" onclick="moveServo(0)">
-0°
-</button>
-
-<button class="btn bg-blue-600 text-white" onclick="moveServo(90)">
-90°
-</button>
-
-<button class="btn bg-blue-600 text-white" onclick="moveServo(180)">
-180°
-</button>
-
+<button class="btn bg-blue-600 text-white" onclick="moveServo(0)">0°</button>
+<button class="btn bg-blue-600 text-white" onclick="moveServo(90)">90°</button>
+<button class="btn bg-blue-600 text-white" onclick="moveServo(180)">180°</button>
 </div>
 
 </div>

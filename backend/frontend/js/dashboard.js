@@ -10,6 +10,9 @@ let fullDetectActive = false;
 /* ================= STREAM ================= */
 
 function startStream() {
+
+  if (streamActive) return;
+
   fetch("/api/stream", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -17,71 +20,87 @@ function startStream() {
   });
 
   const v = document.getElementById("video");
-  v.src = "/video?" + Date.now();
-  v.classList.remove("hidden");
+  const placeholder = document.getElementById("placeholder");
 
-  document.getElementById("placeholder").style.display = "none";
+  if (v) {
+    v.src = "";
+
+    if (placeholder) {
+      placeholder.style.display = "none";
+      placeholder.innerText = "No video stream";
+    }
+
+    setTimeout(() => {
+      v.src = "/video";
+      v.classList.remove("hidden");
+    }, 100);
+  }
 
   streamActive = true;
   updateRailAvailability();
 
-  // ⬇️ ADD THIS
   if (!window.distanceTimer) {
     window.distanceTimer = setInterval(pollDistance, 300);
   }
 }
 
 function stopStream() {
+
   fetch("/api/stream", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action: "stop" })
   });
 
-  document.getElementById("video").classList.add("hidden");
-  document.getElementById("placeholder").style.display = "flex";
+  const v = document.getElementById("video");
+  const placeholder = document.getElementById("placeholder");
+
+  if (v) {
+    v.src = "";
+    v.classList.add("hidden");
+  }
+
+  if (placeholder) {
+    placeholder.style.display = "flex";
+  }
+
+  if (detectionActive) stopDetection(true);
+  if (forwardActive || backwardActive) stopRail(true);
 
   streamActive = false;
   detectionActive = false;
 
-  stopRail(true);
-  stopDetection(true);
   updateRailAvailability();
 
-  // ⬇️ ADD THIS
-  clearInterval(window.distanceTimer);
-  window.distanceTimer = null;
+  if (window.distanceTimer) {
+    clearInterval(window.distanceTimer);
+    window.distanceTimer = null;
+  }
 }
 
 /* ================= DETECTION ================= */
 
 function showDetectionPanel() {
-  if (!streamActive) {
-    showError("No video stream found");
-    return;
-  }
+
+  if (!streamActive) return;
 
   fetch("/api/detection/start", { method: "POST" })
-    .then(r => r.json())
-    .then(data => {
-      if (data.error) {
-        showError(data.error);
-        return;
-      }
-
+    .then(() => {
       detectionActive = true;
-      document.getElementById("detectionPanel").classList.remove("hidden");
+      document.getElementById("detectionPanel")?.classList.remove("hidden");
       updateRailAvailability();
     });
 }
 
 function stopDetection(internal = false) {
+
   if (!internal && !detectionActive) return;
 
   fetch("/api/detection/stop", { method: "POST" });
 
   detectionActive = false;
-  document.getElementById("detectionPanel").classList.add("hidden");
+
+  document.getElementById("detectionPanel")?.classList.add("hidden");
 
   stopRail(true);
   updateRailAvailability();
@@ -89,39 +108,43 @@ function stopDetection(internal = false) {
 
 /* ================= MODEL ================= */
 
-function selectModel(model) {
-  if (!streamActive || !detectionActive) {
-    showError("Start detection first");
+async function selectModel(name) {
+
+  if (!streamActive) {
+    console.error("Start stream first");
     return;
   }
 
-  fetch("/api/model", {
+  console.log("Switching model:", name);
+
+  // force stop detection
+  await fetch("/api/detection/stop", { method: "POST" });
+  detectionActive = false;
+
+  // set model
+  const res = await fetch("/api/model", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ model })
+    body: JSON.stringify({ model: name })
   });
 
-  document.getElementById("activeModel").innerText =
-    model === "tomato" ? "Tomato Condition" : "Leaf Disease";
+  const data = await res.json();
 
-  document.getElementById("tomatoBtn").classList.remove("btn-active");
-  document.getElementById("leafBtn").classList.remove("btn-active");
+  if (data.error) {
+    console.error("MODEL ERROR:", data.error);
+    return;
+  }
 
-  document.getElementById(
-    model === "tomato" ? "tomatoBtn" : "leafBtn"
-  ).classList.add("btn-active");
-}
+  // UI update
+  document.getElementById("activeModel").innerText = name.toUpperCase();
 
-/* ================= CONFIDENCE ================= */
+  // restart detection
+  await fetch("/api/detection/start", { method: "POST" });
+  detectionActive = true;
 
-function setConfidence(v) {
-  document.getElementById("confValue").innerText = v + "%";
+  updateRailAvailability();
 
-  fetch("/api/confidence", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ value: v })
-  });
+  console.log("Model switched");
 }
 
 /* ================= RAIL ================= */
@@ -137,34 +160,27 @@ function toggleBackward() {
 }
 
 function startRail(dir) {
+
   fetch("/api/rail", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ cmd: dir })
-  })
-    .then(r => r.json())
-    .then(data => {
-      if (data.error) {
-        showError(data.error);
-        return;
-      }
+  });
 
-      clearRailStates();
+  clearRailStates();
 
-      if (dir === "forward") {
-        forwardActive = true;
-        document.getElementById("forwardBtn").classList.add("btn-active");
-        setRailStatus("Moving Forward");
-      } else {
-        backwardActive = true;
-        document.getElementById("backwardBtn").classList.add("btn-active");
-        setRailStatus("Moving Backward");
-      }
-    });
+  if (dir === "forward") {
+    forwardActive = true;
+    document.getElementById("forwardBtn")?.classList.add("btn-active");
+    setRailStatus("Moving Forward");
+  } else {
+    backwardActive = true;
+    document.getElementById("backwardBtn")?.classList.add("btn-active");
+    setRailStatus("Moving Backward");
+  }
 }
 
-function stopRail(internal = false) {
-  if (!internal && !railAllowed()) return;
+function stopRail() {
 
   fetch("/api/rail", {
     method: "POST",
@@ -176,139 +192,143 @@ function stopRail(internal = false) {
   setRailStatus("Idle");
 }
 
-/* ================= FULL DETECT ================= */
+/* ================= AUTO ================= */
 
 function startFullDetect() {
+
   if (!railAllowed() || fullDetectActive) return;
 
   fullDetectActive = true;
 
-  disableManualRail();
-  setRailStatus("Full Detect Running");
+  setRailStatus("Auto Running");
 
-  document.getElementById("fullDetectBtn").classList.add("btn-active");
+  fetch("/api/fulldetect", { method: "POST" });
 
-  fetch("/api/fulldetect", {
-    method: "POST",
-    credentials: "include"
-  })
-  .then(res => res.json())
-  .then(data => {
-    console.log("FULL DETECT:", data);
+  monitorAuto();
+}
 
-    if (!data.success) {
-      showError("Full detect failed");
-      finishFullDetect();
-      return;
-    }
+function monitorAuto() {
 
-    // 🔥 AUTO RESET (core fix)
-    setTimeout(finishFullDetect, 4000); // adjust time
-  })
-  .catch(err => {
-    console.error(err);
-    showError("Full detect error");
-    finishFullDetect();
-  });
+  const interval = setInterval(() => {
+
+    fetch("/api/status")
+      .then(r => r.json())
+      .then(data => {
+
+        if (data.auto === "IDLE" && fullDetectActive) {
+          finishFullDetect();
+          clearInterval(interval);
+        }
+
+      });
+
+  }, 400);
 }
 
 function finishFullDetect() {
   fullDetectActive = false;
-
-  document.getElementById("fullDetectBtn").classList.remove("btn-active");
-
-  enableManualRail();
   setRailStatus("Idle");
 }
 
-/* ================= GATING ================= */
+/* ================= HELPERS ================= */
 
 function railAllowed() {
-  if (!streamActive) {
-    showError("No video stream");
-    return false;
-  }
-  if (!detectionActive) {
-    showError("Start detection first");
-    return false;
-  }
-  return true;
+  return streamActive && detectionActive;
 }
 
 function updateRailAvailability() {
   const allowed = streamActive && detectionActive;
 
   ["forwardBtn", "backwardBtn", "fullDetectBtn"].forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.classList.toggle("btn-disabled", !allowed);
+    document.getElementById(id)?.classList.toggle("btn-disabled", !allowed);
   });
 }
-
-/* ================= HELPERS ================= */
 
 function clearRailStates() {
   forwardActive = false;
   backwardActive = false;
-  document.getElementById("forwardBtn").classList.remove("btn-active");
-  document.getElementById("backwardBtn").classList.remove("btn-active");
+
+  document.getElementById("forwardBtn")?.classList.remove("btn-active");
+  document.getElementById("backwardBtn")?.classList.remove("btn-active");
 }
 
 function setRailStatus(text) {
-  document.getElementById("railStatus").innerText =
-    "Rail Status: " + text;
+  const el = document.getElementById("railStatus");
+  if (el) el.innerText = "Rail Status: " + text;
 }
 
-function disableManualRail() {
-  ["forwardBtn", "backwardBtn"].forEach(id =>
-    document.getElementById(id).classList.add("btn-disabled")
-  );
+/* ================= SERVO ================= */
+
+let servoBusy = false;
+
+function moveServo(angle) {
+
+  if (servoBusy) return;
+
+  servoBusy = true;
+
+  fetch("/api/servo", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ angle: angle })
+  }).finally(() => {
+    setTimeout(() => servoBusy = false, 300);
+  });
 }
 
-function enableManualRail() {
-  ["forwardBtn", "backwardBtn"].forEach(id =>
-    document.getElementById(id).classList.remove("btn-disabled")
-  );
-}
-
-function showError(msg) {
-  const p = document.getElementById("placeholder");
-  p.style.display = "flex";
-  p.style.color = "#ff6b6b";
-  p.innerText = msg;
-}
-
-/* ================= AUTH ================= */
-
-function logout() {
-  fetch("/logout", { method: "POST" })
-    .then(() => window.location.href = "/login");
-}
-
-window.addEventListener("beforeunload", () => {
-  navigator.sendBeacon("/logout");
-});
+/* ================= DISTANCE ================= */
 
 function pollDistance() {
+
   fetch("/api/status")
     .then(res => res.json())
     .then(data => {
-      if (data.distance_cm !== undefined) {
-        document.getElementById("distanceValue").innerText =
-          data.distance_cm.toFixed(2);
+
+      console.log("DIST:", data);
+
+      const el = document.getElementById("distanceValue");
+
+      if (el && data.distance_cm !== undefined) {
+        el.innerText = Number(data.distance_cm).toFixed(2);
       }
+
     })
-    .catch(() => {});
+    .catch(err => console.error("DIST ERROR:", err));
 }
-let servoTimer = null;
 
-function moveServo(angle){
+/* ================= SPEED ================= */
 
-  document.getElementById("servoValue").innerText = angle
+document.addEventListener("DOMContentLoaded", () => {
 
-  fetch(`/servo/${angle}`)
-  .then(res => res.json())
-  .then(data => console.log("SERVO:", data))
-  .catch(err => console.error(err))
+  const slider = document.getElementById("speedSlider");
+  const value = document.getElementById("speedValue");
 
-}
+  if (!slider || !value) return;
+
+  value.innerText = slider.value;
+
+  let timeout = null;
+
+  slider.addEventListener("input", () => {
+
+    value.innerText = slider.value;
+
+    clearTimeout(timeout);
+
+    timeout = setTimeout(() => {
+
+      console.log("SPEED:", slider.value);
+
+      fetch("/api/speed", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          speed: parseInt(slider.value)
+        })
+      });
+
+    }, 100);
+
+  });
+
+});
