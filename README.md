@@ -1,620 +1,361 @@
-# \# Tomato Plant Health Monitoring
+# Tomato Plant Health Monitoring
+
+A rail-assisted tomato plant health monitoring system using YOLOv8, ESP32-CAM, Flask, and automated rail movement for real-time tomato disease detection.
+
+## Overview
+
+The system captures tomato plant images and video using an ESP32-CAM mounted on a motorized rail platform. The camera stream is sent to a laptop-based Flask server, where a YOLOv8 model performs tomato leaf disease detection.
+
+The detection results, including disease class, confidence score, and bounding boxes, are displayed through a web interface.
+
+The rail system provides controlled camera movement, while a servo motor changes the camera viewing angle. A Hall-effect sensor provides feedback for tracking the rail position.
+
+## Disease Classes
+
+- Healthy
+- Early Blight
+- Late Blight
+- Leaf Mold
+
+## Key Features
+
+- Real-time tomato disease detection
+- YOLOv8 object detection
+- ESP32-CAM video streaming
+- Flask-based inference backend
+- Web-based monitoring
+- Bounding-box visualization
+- Confidence-score display
+- Motorized rail movement
+- Servo-controlled camera rotation
+- Hall-effect sensor feedback
+
+## System Architecture
+
+    Tomato Plant
+         |
+         v
+      ESP32-CAM
+         |
+      Wi-Fi / HTTP
+         |
+         v
+     Flask Server
+         |
+         v
+     YOLOv8 Model
+         |
+         v
+   Disease Detection
+         |
+         v
+    Web Dashboard
+         |
+         v
+ ESP32 Rail Controller
+         |
+    +----+----+
+    |         |
+    v         v
+Motor Driver Servo Motor
+    |         |
+    v         v
+Rail Movement Camera Rotation
+    |
+    v
+Hall Sensor Feedback
+
+## Technologies
+
+- Python
+- YOLOv8
+- PyTorch
+- CUDA
+- Flask
+- OpenCV
+- ESP32-CAM
+- ESP32
+- HTML
+- CSS
+- JavaScript
+- LabelImg
+
+## Hardware
+
+- ESP32-CAM
+- ESP32 controller
+- Motor
+- Motor driver
+- Servo motor
+- Hall-effect sensor
+- Permanent magnet
+- Linear rail mechanism
+- Camera mounting platform
+- Power supply
+
+## Machine Learning
+
+The machine-learning workflow includes:
+
+- Dataset cleaning
+- Dataset merging
+- Dataset organization
+- Annotation consistency checking
+- Bounding-box annotation
+- Dataset validation
+- Data augmentation
+- YOLOv8 model training
+- CUDA GPU training
+- Batch-size tuning
+- Model experimentation
+- Precision, recall, and mAP evaluation
+
+### Machine Learning Pipeline
+
+    Dataset Collection
+            |
+            v
+    Dataset Cleaning
+            |
+            v
+    Dataset Merging
+            |
+            v
+       Annotation
+            |
+            v
+    Annotation Validation
+            |
+            v
+    Train / Validation / Test Split
+            |
+            v
+      Data Augmentation
+            |
+            v
+       YOLOv8 Training
+            |
+       +----+----+
+       |         |
+       v         v
+    YOLOv8n   YOLOv8m
+       |         |
+       +----+----+
+            |
+            v
+      Model Evaluation
+            |
+            v
+    Precision / Recall / mAP
+            |
+            v
+        Best Model
+            |
+            v
+     Flask Deployment
 
-# 
+## Dataset
 
-# A rail-assisted tomato plant health monitoring system using YOLOv8, ESP32-CAM, Flask, and automated rail movement for real-time tomato disease detection.
+The dataset was prepared using publicly available tomato leaf images and images collected from tomato farms.
 
-# 
+The dataset preparation process included:
 
-# \## Overview
+- Image collection
+- Dataset cleaning
+- Dataset merging
+- Class organization
+- Annotation checking
+- Bounding-box annotation
+- Dataset validation
+- Train/validation/test organization
+- Data augmentation
 
-# 
+## Model Development
 
-# The system captures tomato plant images and video using an ESP32-CAM mounted on a motorized rail platform. The camera stream is sent to a laptop-based Flask server, where a YOLOv8 model performs tomato leaf disease detection.
+Two YOLOv8 variants were experimented with:
 
-# 
+### YOLOv8n
 
-# The detection results, including disease class, confidence score, and bounding boxes, are displayed through a web interface.
+YOLOv8 Nano was used as a lightweight model for faster experimentation and lower computational requirements.
 
-# 
+### YOLOv8m
 
-# The rail system provides controlled camera movement, while a servo motor changes the camera viewing angle. A Hall-effect sensor provides feedback for tracking the rail position.
+YOLOv8 Medium was used for improved feature extraction and detection performance.
 
-# 
+Pre-trained YOLOv8 weights were used for transfer learning.
 
-# \## Disease Classes
+## GPU Training
 
-# 
+CUDA-enabled GPU training was used to accelerate model development and experimentation.
 
-# \- Healthy
+Training parameters such as:
 
-# \- Early Blight
+- Batch size
+- Image size
+- Learning rate
+- Optimizer
+- Number of epochs
+- Early stopping
 
-# \- Late Blight
+were tuned during experimentation.
 
-# \- Leaf Mold
+## Model Evaluation
 
-# 
+The models were evaluated using:
 
-# \## Key Features
+- Precision
+- Recall
+- mAP
+- Confusion Matrix
 
-# 
+These metrics were used to compare YOLOv8n and YOLOv8m and analyze class-wise detection performance.
 
-# \- Real-time tomato disease detection
+## YOLOv8n vs YOLOv8m
 
-# \- YOLOv8 object detection
+### YOLOv8n
 
-# \- ESP32-CAM video streaming
+- Lower computational requirements
+- Faster inference
+- Smaller model size
+- Suitable for lightweight applications
 
-# \- Flask-based inference backend
+### YOLOv8m
 
-# \- Web-based monitoring
+- Higher model capacity
+- Better feature extraction
+- More robust detection
+- Better separation between visually similar classes
 
-# \- Bounding-box visualization
+YOLOv8m provided more stable and reliable detection performance during the project experiments.
 
-# \- Confidence-score display
+## Rail System
 
-# \- Motorized rail movement
+The camera is mounted on a platform that moves along a linear rail.
 
-# \- Servo-controlled camera rotation
+The rail system provides:
 
-# \- Hall-effect sensor feedback
+- Controlled camera movement
+- Repeatable image acquisition
+- Stable positioning
+- Continuous monitoring along crop rows
+- Improved camera coverage
 
-# 
+A motor driver controls the movement of the platform.
 
-# \## System Architecture
+## Camera Rotation
 
-# 
+A servo motor is used to rotate the ESP32-CAM and provide different viewing angles.
 
-# &#x20;   Tomato Plant
+This helps reduce blind spots and improves the coverage of the monitoring system.
 
-# &#x20;        |
+## Position Feedback
 
-# &#x20;        v
+A Hall-effect sensor is used for movement feedback.
 
-# &#x20;    ESP32-CAM
+A permanent magnet is attached to the moving wheel while the Hall sensor remains stationary.
 
-# &#x20;        |
+The ESP32 detects sensor pulses corresponding to wheel rotation and uses the count to estimate the travelled distance.
 
-# &#x20;    Wi-Fi / HTTP
+    Distance = Count × Wheel Circumference
 
-# &#x20;        |
+    Wheel Circumference = 2 × π × Radius
 
-# &#x20;        v
+## Web Application
 
-# &#x20;   Flask Server
+The Flask-based backend provides communication between the ESP32-CAM stream, YOLOv8 model, and web interface.
 
-# &#x20;        |
+The application supports:
 
-# &#x20;        v
+- Live camera/video input
+- YOLOv8 inference
+- Tomato disease detection
+- Bounding-box visualization
+- Confidence-score display
+- Plant health monitoring
+- Rail movement control
 
-# &#x20;   YOLOv8 Model
+## My Contributions
 
-# &#x20;        |
+My primary contributions focused on the machine-learning pipeline.
 
-# &#x20;        v
+### Dataset
 
-# &#x20;   Disease Detection
+- Dataset cleaning
+- Dataset merging
+- Dataset organization
+- Dataset validation
+- Annotation consistency
+- Bounding-box verification
+- Image-annotation checking
 
-# &#x20;        |
+### Model Development
 
-# &#x20;        v
+- YOLOv8 model experimentation
+- YOLOv8n and YOLOv8m comparison
+- Transfer learning
+- CUDA GPU training
+- Batch-size tuning
+- Image-size tuning
+- Training-parameter experimentation
+- Data augmentation
+- Early-stopping configuration
 
-# &#x20;   Web Dashboard
+### Model Evaluation
 
-# &#x20;        |
+- Precision analysis
+- Recall analysis
+- mAP evaluation
+- Confusion-matrix analysis
+- Class-wise performance analysis
+- Model comparison
+- Model selection
 
-# &#x20;        v
+### Integration
 
-# &#x20;   ESP32 Rail Controller
+- Integration of the trained YOLOv8 model with the Flask backend
+- Testing with camera-streamed images
+- Evaluation of real-time detection performance
 
-# &#x20;        |
+## Results
 
-# &#x20;        +------------------+
+The project demonstrates an integrated system combining:
 
-# &#x20;        |                  |
+- Deep learning
+- Computer vision
+- IoT communication
+- Real-time video streaming
+- Automated rail movement
+- Servo-controlled camera positioning
+- Web-based monitoring
 
-# &#x20;        v                  v
+YOLOv8m provided more robust detection performance compared with YOLOv8n during the model experiments.
 
-# &#x20;   Motor Driver        Servo Motor
+## Repository Structure
 
-# &#x20;        |                  |
+    tomato-plant-health-monitor/
+    |
+    +-- backend/
+    |
+    +-- docs/
+    |
+    +-- .gitignore
+    |
+    +-- README.md
 
-# &#x20;        v                  v
+## Future Improvements
 
-# &#x20;   Rail Movement     Camera Rotation
+- Larger and more diverse datasets
+- Additional disease classes
+- Disease severity estimation
+- Improved low-light detection
+- Fully autonomous rail navigation
+- Edge-device deployment
+- Cloud-based monitoring
 
-# &#x20;        |
+## Project Information
 
-# &#x20;        v
+Project: Tomato Plant Health Monitoring
 
-# &#x20;   Hall Sensor Feedback
+Institution: Amrita School of Engineering, Coimbatore
 
-# 
-
-# \## Technologies
-
-# 
-
-# \- Python
-
-# \- YOLOv8
-
-# \- PyTorch
-
-# \- CUDA
-
-# \- Flask
-
-# \- OpenCV
-
-# \- ESP32-CAM
-
-# \- ESP32
-
-# \- HTML/CSS/JavaScript
-
-# \- LabelImg
-
-# 
-
-# \## Machine Learning
-
-# 
-
-# The machine-learning workflow includes:
-
-# 
-
-# \- Dataset cleaning
-
-# \- Dataset merging
-
-# \- Annotation consistency checking
-
-# \- Bounding-box annotation
-
-# \- Dataset validation
-
-# \- Data augmentation
-
-# \- YOLOv8 model training
-
-# \- CUDA GPU training
-
-# \- Batch-size tuning
-
-# \- Model experimentation
-
-# \- Precision, recall, and mAP evaluation
-
-# 
-
-# Two YOLOv8 variants were experimented with:
-
-# 
-
-# \- YOLOv8n
-
-# \- YOLOv8m
-
-# 
-
-# YOLOv8m was selected based on its more stable detection performance and better separation between visually similar disease classes.
-
-# 
-
-# \## Dataset
-
-# 
-
-# The dataset was prepared using publicly available tomato leaf images together with images collected from tomato farms.
-
-# 
-
-# The dataset preparation process included:
-
-# 
-
-# \- Image collection
-
-# \- Dataset cleaning
-
-# \- Dataset merging
-
-# \- Class organization
-
-# \- Annotation checking
-
-# \- Bounding-box annotation
-
-# \- Dataset validation
-
-# \- Train/validation/test organization
-
-# \- Data augmentation
-
-# 
-
-# \## Model Development
-
-# 
-
-# \### YOLOv8n
-
-# 
-
-# YOLOv8 Nano was used as a lightweight model for faster experimentation and lower computational requirements.
-
-# 
-
-# \### YOLOv8m
-
-# 
-
-# YOLOv8 Medium was used for improved feature extraction and detection performance.
-
-# 
-
-# Pre-trained YOLOv8 weights were used for transfer learning.
-
-# 
-
-# \## GPU Training
-
-# 
-
-# CUDA-enabled GPU training was used to accelerate model development and experimentation.
-
-# 
-
-# Training parameters such as batch size, image size, learning rate, optimizer, number of epochs, and early stopping were tuned during experimentation.
-
-# 
-
-# \## Model Evaluation
-
-# 
-
-# The models were evaluated using:
-
-# 
-
-# \- Precision
-
-# \- Recall
-
-# \- mAP
-
-# \- Confusion Matrix
-
-# 
-
-# These metrics were used to compare YOLOv8n and YOLOv8m and analyze class-wise detection performance.
-
-# 
-
-# \## YOLOv8n vs YOLOv8m
-
-# 
-
-# \### YOLOv8n
-
-# 
-
-# \- Lower computational requirements
-
-# \- Faster inference
-
-# \- Smaller model size
-
-# \- Suitable for lightweight applications
-
-# 
-
-# \### YOLOv8m
-
-# 
-
-# \- Higher model capacity
-
-# \- Better feature extraction
-
-# \- More robust detection
-
-# \- Better separation between visually similar classes
-
-# 
-
-# YOLOv8m provided more stable and reliable detection performance during the project experiments.
-
-# 
-
-# \## Hardware
-
-# 
-
-# \- ESP32-CAM
-
-# \- ESP32 controller
-
-# \- Motor
-
-# \- Motor driver
-
-# \- Servo motor
-
-# \- Hall-effect sensor
-
-# \- Permanent magnet
-
-# \- Linear rail mechanism
-
-# \- Camera mounting platform
-
-# \- Power supply
-
-# 
-
-# \## Rail System
-
-# 
-
-# The camera is mounted on a platform that moves along a linear rail.
-
-# 
-
-# The rail system provides:
-
-# 
-
-# \- Controlled camera movement
-
-# \- Repeatable image acquisition
-
-# \- Stable positioning
-
-# \- Continuous monitoring along crop rows
-
-# \- Improved camera coverage
-
-# 
-
-# A motor driver controls the movement of the platform.
-
-# 
-
-# \## Camera Rotation
-
-# 
-
-# A servo motor is used to rotate the ESP32-CAM and provide different viewing angles.
-
-# 
-
-# This helps reduce blind spots and improves the coverage of the monitoring system.
-
-# 
-
-# \## Position Feedback
-
-# 
-
-# A Hall-effect sensor is used for movement feedback.
-
-# 
-
-# A permanent magnet is attached to the moving wheel while the Hall sensor remains stationary.
-
-# 
-
-# The ESP32 detects sensor pulses corresponding to wheel rotation and uses the count to estimate the travelled distance.
-
-# 
-
-# &#x20;   Distance = Count × Wheel Circumference
-
-# 
-
-# &#x20;   Wheel Circumference = 2 × π × Radius
-
-# 
-
-# \## Web Application
-
-# 
-
-# The Flask-based backend provides communication between the ESP32-CAM stream, YOLOv8 model, and web interface.
-
-# 
-
-# The application supports:
-
-# 
-
-# \- Live camera/video input
-
-# \- YOLOv8 inference
-
-# \- Tomato disease detection
-
-# \- Bounding-box visualization
-
-# \- Confidence-score display
-
-# \- Plant health monitoring
-
-# \- Rail movement control
-
-# 
-
-# \## My Contributions
-
-# 
-
-# My primary contributions focused on the machine-learning pipeline.
-
-# 
-
-# \### Dataset
-
-# 
-
-# \- Dataset cleaning
-
-# \- Dataset merging
-
-# \- Dataset organization
-
-# \- Dataset validation
-
-# \- Annotation consistency
-
-# \- Bounding-box verification
-
-# \- Image-annotation checking
-
-# 
-
-# \### Model Development
-
-# 
-
-# \- YOLOv8 model experimentation
-
-# \- YOLOv8n and YOLOv8m comparison
-
-# \- Transfer learning
-
-# \- CUDA GPU training
-
-# \- Batch-size tuning
-
-# \- Image-size tuning
-
-# \- Training-parameter experimentation
-
-# \- Data augmentation
-
-# \- Early-stopping configuration
-
-# 
-
-# \### Model Evaluation
-
-# 
-
-# \- Precision analysis
-
-# \- Recall analysis
-
-# \- mAP evaluation
-
-# \- Confusion-matrix analysis
-
-# \- Class-wise performance analysis
-
-# \- Model comparison
-
-# \- Model selection
-
-# 
-
-# \### Integration
-
-# 
-
-# \- Integration of the trained YOLOv8 model with the Flask backend
-
-# \- Testing with camera-streamed images
-
-# \- Evaluation of real-time detection performance
-
-# 
-
-# \## Results
-
-# 
-
-# The project demonstrates an integrated system combining:
-
-# 
-
-# \- Deep learning
-
-# \- Computer vision
-
-# \- IoT communication
-
-# \- Real-time video streaming
-
-# \- Automated rail movement
-
-# \- Servo-controlled camera positioning
-
-# \- Web-based monitoring
-
-# 
-
-# YOLOv8m provided more robust detection performance compared with YOLOv8n during the model experiments.
-
-# 
-
-# \## Repository Structure
-
-# 
-
-# &#x20;   tomato-plant-health-monitor/
-
-# &#x20;   |
-
-# &#x20;   +-- backend/
-
-# &#x20;   |
-
-# &#x20;   +-- docs/
-
-# &#x20;   |
-
-# &#x20;   +-- .gitignore
-
-# &#x20;   |
-
-# &#x20;   +-- README.md
-
-# 
-
-# \## Future Improvements
-
-# 
-
-# \- Larger and more diverse datasets
-
-# \- Additional disease classes
-
-# \- Disease severity estimation
-
-# \- Improved low-light detection
-
-# \- Fully autonomous rail navigation
-
-# \- Edge-device deployment
-
-# \- Cloud-based monitoring
-
-# 
-
-# \## Project Information
-
-# 
-
-# \*\*Project:\*\* Tomato Plant Health Monitoring
-
-# 
-
-# \*\*Institution:\*\* Amrita School of Engineering, Coimbatore
-
-# 
-
-# \*\*Main Technologies:\*\* YOLOv8, Python, Flask, ESP32-CAM, CUDA, PyTorch, and OpenCV
-
+Main Technologies: YOLOv8, Python, Flask, ESP32-CAM, CUDA, PyTorch, and OpenCV
