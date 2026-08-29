@@ -46,24 +46,24 @@ The rail system provides controlled camera movement, while a servo motor changes
      YOLOv8 Model
          |
          v
-   Disease Detection
+    Disease Detection
          |
          v
     Web Dashboard
          |
          v
- ESP32 Rail Controller
+    ESP32 Rail Controller
          |
     +----+----+
     |         |
     v         v
-Motor Driver Servo Motor
+    Motor Driver Servo Motor
     |         |
     v         v
-Rail Movement Camera Rotation
+    Rail Movement Camera Rotation
     |
     v
-Hall Sensor Feedback
+    Hall Sensor Feedback
 
 ## Technologies
 
